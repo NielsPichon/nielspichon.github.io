@@ -28,9 +28,12 @@ url: "https://nielspichon.github.io/" # the base hostname & protocol for your si
 github_username:  NielsPichon
 
 # Build settings
-theme: minima
+# theme: minima
+remote_theme: broccolini/swiss
 plugins:
   - jekyll-feed
+  - jekyll-remote-theme
+
 
 # Exclude from processing.
 # The following items will not be processed, by default.
