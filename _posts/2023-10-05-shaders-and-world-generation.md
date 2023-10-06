@@ -114,7 +114,7 @@ Lastly, the `random` function is actually a pseudo random number generated based
 
 Also, I use a THREAD_GROUP_SIZE of 64, but this could be adapted to the hardware. I wrote this kernel on an older laptop with a GTX 1060, so chose smaller resolutions and group sizes, but more recent GPUs with more VRAM and cores could sere better throughput with larger group sizes possibly. One would need to benchmark.
 
-## My laptop is choking :scream:
+## My laptop is choking 🙀
 
 Let's imagine an ideal world where there is infinite compute. In this context, the perfect generation algorithm would simulate such fine details that the player could see the small pebbles. But realistically, on consumer grade hardware, it would not be possible to simulate such terrain in real time. So we need to find a way to reduce the amount of computation required to generate the terrain. Usually, the first optimization trick is to try to not allocate as many resources to in-game objects that are not visible.
 
