@@ -9,6 +9,8 @@ Procedural generation is one of my favorite topics. There is a very particular a
 
 The task we'll tackle is generating a tropical island completely procedural. I have not created any 3D asset yet (vegetation, buildings, rocks...) so we'll concentrate on the base terrain itself. Once it is generated, with biomes and everything, it should be fairly straightforward to scatter these assets using a Poisson disc sampling algorithm or similar technique. But that's for another day.
 
+![Final island with no biome](/assets/island_shader/final.png)
+
 But before diving into the generation itself, one may wonder why we would want to walk the difficult route of procedural terrain generation. I mean, beside the obvious cool factor, this is much more complex than authoring 3D models my hand, with less control over the actual output. To answer this question I'll describe a bit the project. I am making a game prototype of a multiplayer competitive crafting and fighting game, where each player tries to create the tools required to retrieve some form of treasure before the other do. Now because part of the game loop is having to find scarce resources, the game would have very little replayability if we were to author one map, as players would be spoiled of the thrill to find them. And that's really where procedural generation shines. It allows spicing up things by introducing an element of randomness, in an organic fashion. My two cents is, it is always best to make remarkable landmarks by hand, and avoid procedural generation if it can be avoided. But should there be a need for infinite content and replayability, this is the only strategy.
 
 So here's the plan: we are going to generate a grid of points, which will correspond to the vertices of the mesh. Using some structured noise function, we will assign a height to each point. Then we will use a remapping function to give some characteristics to the terrain topology, like sharp cliffs or such. At this stage we will have a base terrain. With this out of the way, we can then generate the shape of our island. We then compute a distance function to the coast and modulate the terrain's height based on these. Lastly, we generate some biomes based on the height, the distance to the coast and some extra noise function, and we then blend together several terrains with various remapping functions to obtain our final terrain. The goal of this last step is to add some variety to the island topography.
@@ -27,8 +29,6 @@ I think it is important to give credit where credit is due. So I would definitel
 
 ## The base terrain
 
-<!-- TODO: add image -->
-
 As a starting point we use a grid of point which represent the vertices of a subdivided plane. This will indeed limit our ability to terrain that curls back onto itself like caves, or vertical planes, but in most instances this is sufficient, given we have no plan on adding underground structures. And should we want to make steeper cliffs, we can either increase the grid resolution, or add hand-authored meshes on top of the base terrain mesh. On the other hand, this allows for a very lightweight data structure as the only dynamic parameter of our terrain is the height of each vertex.
 
 We therefore represent the data a `ComputeBuffer` of floats:
@@ -37,7 +37,13 @@ We therefore represent the data a `ComputeBuffer` of floats:
 ComputeBuffer heightMap = new ComputeBuffer(resolution * resolution, sizeof(float));
 ```
 
-The very first step is to generate the height for each vertex using some gradient noise function such as [Perlin Noise](https://thebookofshaders.com/11/). Gradient noise has the interest, as compared to completely random values, to retain some sort of structure, just like real terrain. I further used a fractal noise. This is to say that I layered several octaves of noise, each with a different frequency and amplitude. This is a very common technique in procedural generation, as it allows adding details at different scales. Altogether the shader code looks like this:
+The very first step is to generate the height for each vertex using some gradient noise function such as [Perlin Noise](https://thebookofshaders.com/11/). Gradient noise has the interest, as compared to completely random values, to retain some sort of structure, just like real terrain. I further used a fractal noise. This is to say that I layered several octaves of noise, each with a different frequency and amplitude. This is a very common technique in procedural generation, as it allows adding details at different scales. Below is a comparison of perlin noise with only one "octave" and several "octaves":
+
+![Single octave perlin noise](/assets/island_shader/single_octave_noise.png)
+
+![Several octaves perlin noise](/assets/island_shader/several_octaves.png)
+
+Altogether the shader code looks like this:
 
 ```hlsl
 #pragma kernel HeightMap
@@ -151,7 +157,11 @@ To do this we can start by drawing the shape of the island. At the highest level
 
 My initial idea was to use polar coordinates. This way we could ensure having the same noise value for all the grid points that share a common angle in polar coordinates. This would also mean that the noise function we use would need to be periodic of period 2 pi to ensure continuity.
 
-Upon experimenting, however, I found that using regular cartesian coordinates would lead to a more organic island shape, we possibly some "rock" formations outside the main island, which looks really cool and natural.
+Upon experimenting, however, I found that using regular cartesian coordinates would lead to a more organic island shape, we possibly some "rock" formations outside the main island, which looks really cool and natural. Below is a comparison of both methods, with polar coordinates first:
+
+![Water mask from polar coordinates](/assets/island_shader/base_water_mask_polar_coords.png)
+
+![Water mask from cartesian coordinates](/assets/island_shader/base_water_mask.png)
 
 Designing a kernel which follows the above principles we can get a binary mask for where the island should be:
 
@@ -169,7 +179,11 @@ void MakeIslandMask(uint3 id : SV_DispatchThreadID)
 }
 ```
 
-Now, we cannot simply multiply the terrain height with the mask. This would lead to obvious discontinuities, which barely ever occur in real life. What would instead make sense would be to have the terrain height gradually decrease as it gets closer to the sea shore. What we therefore need to know is the distance to the coast. Starting from the binary island mask, we can compute a [2d euclidean distance transform](https://en.wikipedia.org/wiki/Distance_transform). Because everything occurs inside a shader, we ideally want the algorithm to be fairly straightforward and highly parallel. So what I ended up doing is repeatedly calling the same kernel, which propagates the distance to the closest coast. The kernel is called until the distance transform converges. This is not the most efficient algorithm, but it is simple and works well enough for our purposes.
+Now, we cannot simply multiply the terrain height with the mask. This would lead to obvious discontinuities, which barely ever occur in real life. What would instead make sense would be to have the terrain height gradually decrease as it gets closer to the sea shore.
+
+![Abrupt cliff from the water mask](/assets/island_shader/no_smoothing.png)
+
+What we therefore need to know is the distance to the coast. Starting from the binary island mask, we can compute a [2d euclidean distance transform](https://en.wikipedia.org/wiki/Distance_transform). Because everything occurs inside a shader, we ideally want the algorithm to be fairly straightforward and highly parallel. So what I ended up doing is repeatedly calling the same kernel, which propagates the distance to the closest coast. The kernel is called until the distance transform converges. This is not the most efficient algorithm, but it is simple and works well enough for our purposes.
 
 ```hlsl
 RWStructuredBuffer<float> mask;
@@ -230,9 +244,11 @@ void ComputeEDT (uint3 id : SV_DispatchThreadID)
 
 You'll notice that the offset we had for the height map is not present. This is because, we are going to generate this map only once when loading the level and then sample it upon re-generating a terrain chunk. This makes things much faster as the above kernel might run up to once for each off the points on one axis of grid.
 
-With the distance to the coast computed, we can simply multiply the terrain height with this distance, normalized by the maximum distance to the coast.
+Below is a picture of the computed distance field:
 
-<!-- add picture -->
+![Distance field to the coast](/assets/island_shader/distance_field.png)
+
+With the distance to the coast computed, we can simply multiply the terrain height with this distance, normalized by the maximum distance to the coast.
 
 ## More water
 
@@ -276,9 +292,9 @@ void GenerateRiver (uint3 id : SV_DispatchThreadID)
 }
 ```
 
-Overall, I am quite happy with the result, as, besides the practical gameplay aspect, it gives a more unique look to the island:
+Overall, I am quite happy with the result, as, besides the practical gameplay aspect, it gives a more unique look to the island. Below, in black is the final water mask:
 
-<!-- add picture -->
+![The final water mask](/assets/island_shader/water_mask.png)
 
 ## Biomes
 
@@ -330,7 +346,13 @@ var shapingBuffer = new ComputeBuffer(
     shapingFunction.Length, sizeof(float));
 ```
 
-Now that we have the ability to generate more unique terrains, what we want is to mix and match them. To do so, we take a grid of a set resolution, with each cell having its index assigned as value. This represents our various biomes. Now we generate a second grid that we deform using some Perlin noise, and we sample the cell of the original grid in which each point lands. What results is a patchwork of organic looking regions, all connected, with one biome assigned to each. The last step is to remap each region's biome to the corresponding biome, using a modulo operator, where the modulo is the number of desired biomes.
+Now that we have the ability to generate more unique terrains, what we want is to mix and match them. To do so, we take a grid of a set resolution, with each cell having its index assigned as value. This represents our various biomes.
+
+![Base biome grid](/assets/island_shader/base_biom_grid.png)
+
+Now we generate a second grid that we deform using some Perlin noise, and we sample the cell of the original grid in which each point lands. What results is a patchwork of organic looking regions, all connected, with one biome assigned to each. The last step is to remap each region's biome to the corresponding biome, using a modulo operator, where the modulo is the number of desired biomes.
+
+![Distorted biome grid](/assets/island_shader/distorted_bioms.png)
 
 ```hlsl
 RWStructuredBuffer<float2> points;
@@ -442,8 +464,6 @@ void ClosestPointOnDisplacedGrid (uint3 id : SV_DispatchThreadID)
         floor(random1D(seed + float(closest)) * numProperties));
 }
 ```
-
-<!-- TODO: add picture -->
 
 ## Generating the final terrain
 
