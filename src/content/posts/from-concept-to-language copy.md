@@ -70,4 +70,4 @@ Lastly, we "merge" words that have the name concept sub-concepts. These are inva
 ### Contraction rules
 This part is tricky. We now have a full "dictionary". But many of the words are >4 syllables long which make them extremely impractical to pronounce.  We even see a number of words with repeating syllables, especially when it comes to gradation, where we tend to have the "more" or "less" phonemes repeated many times. We could decide to arbitrarily cut into the word but then we would end up having many identical words, which is not desired.
 
-To Be continued
+This is basically where I am at with this project. Hopefully I'll find the time to do more work on it some day.

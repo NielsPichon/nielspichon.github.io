@@ -111,6 +111,27 @@
     font-size: 1.18rem;
   }
 
+  :global(.post-body ul),
+  :global(.post-body ol) {
+    margin: 0 0 1.4rem;
+    padding-left: 1.5rem;
+  }
+
+  :global(.post-body li) {
+    font-family: var(--body);
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--ink2);
+    margin-bottom: 0.4rem;
+  }
+
+  :global(.post-body li > ul),
+  :global(.post-body li > ol) {
+    margin-top: 0.4rem;
+    margin-bottom: 0.7rem;
+    padding-left: 1.3rem;
+  }
+
   :global(.post-body h2) {
     font-family: var(--serif);
     font-size: 1.5rem;
