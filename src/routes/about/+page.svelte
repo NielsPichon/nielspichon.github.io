@@ -12,16 +12,15 @@
 
   <div class="about-body">
     <p>
-      I read AI papers the way some people read novels — compulsively, argumentatively, with a lot of
-      margin notes. This blog is where I put those notes in order.
+      I have come to realise that it quickly gets easy to get out of touch with the
+      broader litterature when you have your head down to a specific applied research project,
+      especially as moving fast often means cutting corners.
+      To avoid losing the plot, I have set as an exercise to myself to read and explain at least one paper a week here.
+      I'll also share thoughts and ideas of research topics.
     </p>
     <p>
       The name comes from the physics phenomenon where a single electron triggers a cascade of
       ionization events. Feels right for how ideas in AI tend to propagate.
-    </p>
-    <p>
-      I write about what I find genuinely interesting, not what's trending. Mostly transformers,
-      scaling, and the occasionally unsettling implications of both.
     </p>
   </div>
 
