@@ -7,7 +7,7 @@ teaser: "Bootstrapping 3D image models from 2D SoTA models."
 paper: "Own interest"
 ---
 
-One of the coolest papers I have read as of late, are the [LoRA paper](https://arxiv.org/pdf/2106.09685.pdf) (2021) and its more recent successor on [QLoRA](https://arxiv.org/pdf/2305.14314.pdf) (2023). At the highest level, LoRA is a conceptually simple yet very elegant solution for fine-tuning Large Language Models while using significantly less GPU VRAM and compute. And as been widely adopted as a good solution for fine-tuning large models with less resources. Now, I have mostly been dealing with convolution networks as of late, playing with medical images. The original paper focused on transformers and by extension, linear layers. But it turns out that the concept can easily be extended to convolutional layers too! And this is what we are going to explore in this article.
+One of the coolest papers I have read as of late, are the [LoRA paper](https://arxiv.org/pdf/2106.09685.pdf) (2021) and its more recent successor on [QLoRA](https://arxiv.org/pdf/2305.14314.pdf) (2023). At the highest level, LoRA is a conceptually simple yet very elegant solution for fine-tuning Large Language Models while using significantly less GPU VRAM and compute. It has been widely adopted as a good solution for fine-tuning large models with less resources. Now, I have mostly been dealing with convolution networks as of late, playing with medical images. The original paper focused on transformers and by extension, linear layers. But it turns out that the concept can easily be extended to convolutional layers too! And this is what we are going to explore in this article.
 
 ## The gist of LoRA
 

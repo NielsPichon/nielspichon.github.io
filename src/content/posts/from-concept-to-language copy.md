@@ -35,7 +35,8 @@ English dictionaries, include more than 400k common words (450k for Merriam-Webs
 
 As a makeshift solution, I have chosen to use a LLM. The choice of said LLM does not really matter as long as it allows JSON generation (which I find important for automation purposes). For this work we use a System Prompt with the following instructions:
 
-```
+```python
+"""
 You are a linguistic expert. Your task is to derive a concept from sub-concept(s), in order to progressively build a hierarchy. You can do so by splitting the concept into sub-concepts (sun = light + sky, tree = wood + plant, magic = light + spiritual, rain = sky + water) or by applying "modifiers" from this list: "action", "past", "future", "more", "less" "abscence of", "inverse of", "left", "right", "up", "down". For instance "casting" a spell is action + magic.
 
 You will choose between 2 and 3 concepts.
@@ -57,6 +58,7 @@ You will answer using the following JSON schema:
 		}
 	]
 }
+"""
 ```
 
 We then run this, providing several words on each query and then arranging them into a massive directed graph.

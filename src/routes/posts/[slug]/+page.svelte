@@ -1,5 +1,28 @@
 <script>
+  import { onMount, tick } from 'svelte';
+  import hljs from 'highlight.js/lib/core';
+  import python from 'highlight.js/lib/languages/python';
+
   let { data } = $props();
+
+  hljs.registerLanguage('python', python);
+
+  async function highlightCodeBlocks() {
+    await tick();
+
+    document.querySelectorAll('.post-body pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }
+
+  onMount(() => {
+    highlightCodeBlocks();
+  });
+
+  $effect(() => {
+    data.content;
+    highlightCodeBlocks();
+  });
 </script>
 
 <svelte:head>
@@ -179,6 +202,18 @@
   :global(.post-body pre code) {
     background: none;
     padding: 0;
+  }
+
+  :global(.post-body pre code.hljs) {
+    color: oklch(30% 0.01 260);
+  }
+
+  :global(:not(.dark) .post-body pre code.hljs .hljs-string) {
+    color: oklch(42% 0.07 40);
+  }
+
+  :global(.dark .post-body pre code.hljs) {
+    color: oklch(88% 0.01 80);
   }
 
   :global(.post-body img) {

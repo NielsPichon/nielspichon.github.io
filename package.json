@@ -18,7 +18,9 @@
 	},
 	"dependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",
+		"highlight.js": "^11.11.1",
 		"mdsvex": "^0.12.7",
+		"rehype-highlight": "^7.0.2",
 		"rehype-katex": "^5.0.0",
 		"remark-math": "^3.0.1"
 	}
