@@ -4,24 +4,84 @@
   import python from 'highlight.js/lib/languages/python';
 
   let { data } = $props();
+  let mermaid;
+  let mermaidInitialized = false;
 
   hljs.registerLanguage('python', python);
+
+  async function renderMermaidBlocks() {
+    await tick();
+
+    const blocks = document.querySelectorAll(
+      '.post-body pre code.language-mermaid, .post-body pre code.lang-mermaid'
+    );
+
+    if (!blocks.length) {
+      return;
+    }
+
+    if (!mermaid) {
+      const module = await import('mermaid');
+      mermaid = module.default;
+    }
+
+    if (!mermaidInitialized) {
+      const isDarkTheme =
+        document.documentElement.classList.contains('dark') ||
+        document.body.classList.contains('dark');
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDarkTheme ? 'dark' : 'default'
+      });
+      mermaidInitialized = true;
+    }
+
+    let chartIdx = 0;
+    for (const block of blocks) {
+      const chart = block.textContent?.trim();
+      const pre = block.closest('pre');
+
+      if (!chart || !pre) {
+        continue;
+      }
+
+      try {
+        const id = `mermaid-${Date.now()}-${chartIdx++}`;
+        const { svg } = await mermaid.render(id, chart);
+        const container = document.createElement('div');
+        container.className = 'mermaid-diagram';
+        container.innerHTML = svg;
+        pre.replaceWith(container);
+      } catch (err) {
+        console.error('Failed to render Mermaid chart:', err);
+      }
+    }
+  }
 
   async function highlightCodeBlocks() {
     await tick();
 
     document.querySelectorAll('.post-body pre code').forEach((block) => {
+      if (block.classList.contains('language-mermaid') || block.classList.contains('lang-mermaid')) {
+        return;
+      }
       hljs.highlightElement(block);
     });
   }
 
+  async function processPostBody() {
+    await renderMermaidBlocks();
+    await highlightCodeBlocks();
+  }
+
   onMount(() => {
-    highlightCodeBlocks();
+    processPostBody();
   });
 
   $effect(() => {
     data.content;
-    highlightCodeBlocks();
+    processPostBody();
   });
 </script>
 
@@ -208,6 +268,46 @@
     color: oklch(30% 0.01 260);
   }
 
+  :global(.post-body .mermaid-diagram) {
+    background: var(--bg2);
+    padding: 1.2rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+
+  :global(.post-body .mermaid-diagram svg) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  :global(.post-body .mermaid-diagram svg foreignObject) {
+    overflow: visible;
+  }
+
+  :global(:not(.dark) .post-body .mermaid-diagram svg text),
+  :global(:not(.dark) .post-body .mermaid-diagram svg tspan),
+  :global(:not(.dark) .post-body .mermaid-diagram svg .label),
+  :global(:not(.dark) .post-body .mermaid-diagram svg foreignObject div) {
+    fill: oklch(28% 0.01 260) !important;
+    color: oklch(28% 0.01 260) !important;
+  }
+
+  :global(.dark .post-body .mermaid-diagram) {
+    background: oklch(18% 0.008 80);
+  }
+
+  :global(.dark .post-body .mermaid-diagram svg .node rect),
+  :global(.dark .post-body .mermaid-diagram svg .node circle),
+  :global(.dark .post-body .mermaid-diagram svg .node ellipse),
+  :global(.dark .post-body .mermaid-diagram svg .node polygon),
+  :global(.dark .post-body .mermaid-diagram svg .cluster rect),
+  :global(.dark .post-body .mermaid-diagram svg .labelBkg) {
+    fill: oklch(30% 0.012 80) !important;
+    stroke: oklch(62% 0.012 80) !important;
+  }
+
   :global(:not(.dark) .post-body pre code.hljs .hljs-string) {
     color: oklch(42% 0.07 40);
   }
@@ -226,5 +326,10 @@
   :global(.katex-display) {
     margin: 1.5rem 0;
     overflow-x: auto;
+  }
+
+  :global(.dark .post-body .katex),
+  :global(.dark .post-body .katex-display) {
+    color: oklch(96% 0.004 80);
   }
 </style>

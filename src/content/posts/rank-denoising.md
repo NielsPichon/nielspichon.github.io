@@ -1,7 +1,7 @@
 ---
 title: "Rank Denoising - highlighting model sparsity"
 date: "April, 2026"
-readTime: "8 min"
+readTime: "10 min"
 tag: "Idea"
 teaser: "Can we use diffusion to explicetely find the true rank of weight matrices ?"
 paper: "Own Research"
@@ -27,7 +27,7 @@ $$
     \hat{W} = A_{nr} * B_{rm} + (\epsilon = A_{nr} + \epsilon') * B_{rm}
 $$
 
-Because the lower rank decomposition is not unique, we can further enforce that $B_{rn}$ be normally distributed and thus $\epsilon ' \tilde \mathcal N(0,I)$. Granted $r$ is the effective rank of $W$, we can compute the Moore-Penrose pseudo inverse of A as
+Because the lower rank decomposition is not unique, we can further enforce that $B_{rn}$ be normally distributed and thus $\epsilon' \sim \mathcal N(0, I)$. Granted $r$ is the effective rank of $W$, we can compute the Moore-Penrose pseudo inverse of A as
 
 $$
   A^{-1} = A^T(A * A^T)^{-1}
@@ -71,4 +71,27 @@ Given the expectation equation is true for any mean of A, if we arbitrarily set 
 
 Using these matrices, we feed $W = A * B$ into a MM-DiT inspired architecture.
 
+```mermaid
+flowchart TD
+    A[noisy W] --> B[Patchify]
+    B --> C(+)
+    D[Position] --> C
+    F[rank] --> G[Linear]
+    G --> H[Concatenate]
+    C --> H
+    H --> I[DiT Blocks]
+    T[t] --> U[sine embedding]
+    U --> V[Linear]
+    V --> I
+    I --> J[projection]
+    J --> K[A, r]
+```
+
+An important parameter here is the effective rank that we append as an extra token at then end of the sequence. W is padded with 0s in order to match the maximum matrix size the model can handle. For simplicity, we will use a square matrix here, which should match most transformer weight matrices (same dimensionality projection).
+
 Lastly we use the time sampling schedule from SD3.
+
+
+## Results
+
+I am still running the experiments...
