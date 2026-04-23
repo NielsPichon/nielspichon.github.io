@@ -16,7 +16,7 @@
   </h1>
   <SquiggleUnderline width={420} />
   <p class="hero-subtitle">
-    Reading the papers that move AI forward, then telling you what I actually think about them.
+    Cascading ideas in AI, Computer vision and related fields
   </p>
 </section>
 

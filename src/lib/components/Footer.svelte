@@ -1,6 +1,5 @@
 <footer>
   <span>Electron Avalanche — Niels Pichon</span>
-  <span>AI papers, my way</span>
 </footer>
 
 <style>

@@ -1,6 +1,6 @@
 ---
 title: "From concept to Language - Mapping the English language."
-date: "Apr 22, 2026"
+date: "Nov 22, 2025"
 readTime: "5 min"
 tag: "Idea"
 teaser: "How would you leverage AI to invent a new language?"
