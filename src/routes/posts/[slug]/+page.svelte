@@ -96,7 +96,11 @@
     <div class="post-header-meta">
       {#if data.metadata?.date}<span>{data.metadata.date}</span>{/if}
       {#if data.metadata?.readTime}<span>{data.metadata.readTime}</span>{/if}
-      {#if data.metadata?.tag}<span class="post-tag">{data.metadata.tag}</span>{/if}
+      {#if data.metadata?.tags?.length}
+        {#each data.metadata.tags as tag}
+          <span class="post-tag">{tag}</span>
+        {/each}
+      {/if}
     </div>
     <h1 class="post-header-title">{data.metadata?.title}</h1>
     {#if data.metadata?.paper}

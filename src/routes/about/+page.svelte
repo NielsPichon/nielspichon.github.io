@@ -12,20 +12,34 @@
 
   <div class="about-body">
     <p>
-      I have come to realise that it quickly gets easy to get out of touch with the
-      broader litterature when you have your head down to a specific applied research project,
-      especially as moving fast often means cutting corners.
-      To avoid losing the plot, I have set as an exercise to myself to read and explain at least one paper a week here.
-      I'll also share thoughts and ideas of research topics.
+      Ideas are like electron: you need to shoot but one to trigger a whole cascade of ionization events.
     </p>
     <p>
-      The name comes from the physics phenomenon where a single electron triggers a cascade of
-      ionization events. Feels right for how ideas in AI tend to propagate.
+    Hi! I am Niels, R&D AI engineer/scientist. I write about research ideas I pursue for
+    fun, as well as, perhaps, some papers I read and found interesting.
     </p>
+    <p>
+      I am currently working as the AI director, R&D engineer, and Associate Game-Director at Onibi,
+      a small studio working on its first title. My recent research at Onibi involves diffusion for
+      voxel based 3D models (RF, data collection and curation, SFT, evaluation...), visual world understanding,
+      as well as agentic based on world graphs, LLM steering, and hybrid
+      AI-procedural generation workflows, for generating dynamic, in-lore NPC behaviour,
+      quests and dialogues.
+    </p>
+    <p>
+      My interests span a broad range of fields, from Computer vision, LLMs to music, games, graphic rendering, shaders, and procedural generation.
+    </p>
+    <p>
+      If that sounds interesting, or want to discuss work opportunities, let's chat!
+    </p>
+
   </div>
 
   <div class="about-links">
     <a href="https://github.com/nielspichon" class="about-link" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.linkedin.com/in/niels-pichon-bb530510a/?locale=en-US" class="about-link" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="/Resume-NielsPichon.pdf" class="about-link" download>Resume</a>
+    <a href="mailto:niels.pchn@gmail.com" class="about-link">niels.pchn@gmail</a>
   </div>
 </div>
 

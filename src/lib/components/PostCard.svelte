@@ -7,7 +7,11 @@
     <div class="post-meta">
       <span>{post.date}</span>
       <span>{post.readTime}</span>
-      {#if post.tag}<span class="post-tag">{post.tag}</span>{/if}
+      {#if post.tags?.length}
+        {#each post.tags as tag}
+          <span class="post-tag">{tag}</span>
+        {/each}
+      {/if}
     </div>
     <h2 class="post-title">{post.title}</h2>
     {#if post.teaser}<p class="post-teaser">{post.teaser}</p>{/if}

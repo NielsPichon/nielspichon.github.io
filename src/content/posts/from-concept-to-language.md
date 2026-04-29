@@ -1,10 +1,9 @@
 ---
 title: "From concept to Language - Mapping the English language."
 date: "November, 2025"
-readTime: "5 min"
-tag: "Idea"
+tag: ["Other interest", "WIP"]
 teaser: "How would you leverage AI to invent a new language?"
-paper: "Own interest"
+# paper: "Own interest"
 ---
 
 *Disclaimer: I am no linguist and this work is purely empirical*

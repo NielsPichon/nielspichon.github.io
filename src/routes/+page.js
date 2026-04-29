@@ -1,4 +1,29 @@
 export const prerender = true;
+import readingTime from 'reading-time/lib/reading-time';
+
+function getMarkdownBody(markdown) {
+  if (typeof markdown !== 'string') return '';
+  return markdown.replace(/^---[\s\S]*?---\s*/, '');
+}
+
+function getReadTimeLabel(markdown) {
+  const minutes = Math.max(1, Math.ceil(readingTime(getMarkdownBody(markdown)).minutes));
+  return `${minutes} min`;
+}
+
+function normalizeTags(metadata) {
+  const rawTags = metadata?.tags ?? metadata?.tag;
+
+  if (Array.isArray(rawTags)) {
+    return rawTags.filter((value) => typeof value === 'string' && value.trim().length > 0);
+  }
+
+  if (typeof rawTags === 'string' && rawTags.trim().length > 0) {
+    return [rawTags.trim()];
+  }
+
+  return [];
+}
 
 function toTimestamp(value) {
   if (typeof value !== 'string') return 0;
@@ -30,11 +55,25 @@ function toTimestamp(value) {
 /** @type {import('./$types').PageLoad} */
 export async function load() {
   const modules = import.meta.glob('/src/content/posts/*.md', { eager: true });
+  const rawModules = import.meta.glob('/src/content/posts/*.md', {
+    eager: true,
+    query: '?raw',
+    import: 'default'
+  });
 
   const posts = Object.entries(modules).map(([path, mod]) => {
     const slug = path.split('/').pop().replace('.md', '');
-    const { title, date, tag, teaser, paper, readTime } = mod.metadata ?? {};
-    return { slug, title, date, tag, teaser, paper, readTime };
+    const { title, date, teaser, paper, readTime } = mod.metadata ?? {};
+    const tags = normalizeTags(mod.metadata);
+    return {
+      slug,
+      title,
+      date,
+      tags,
+      teaser,
+      paper,
+      readTime: readTime ?? getReadTimeLabel(rawModules[path])
+    };
   });
 
   posts.sort((a, b) => {

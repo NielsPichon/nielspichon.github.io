@@ -1,10 +1,9 @@
 ---
 title: "From 2D to 3D using LoRa"
 date: "June, 2023"
-readTime: "8 min"
-tag: "Idea"
+tag: "PEFT"
 teaser: "Bootstrapping 3D image models from 2D SoTA models."
-paper: "Own interest"
+# paper: "Own interest"
 ---
 
 One of the coolest papers I have read as of late, are the [LoRA paper](https://arxiv.org/pdf/2106.09685.pdf) (2021) and its more recent successor on [QLoRA](https://arxiv.org/pdf/2305.14314.pdf) (2023). At the highest level, LoRA is a conceptually simple yet very elegant solution for fine-tuning Large Language Models while using significantly less GPU VRAM and compute. It has been widely adopted as a good solution for fine-tuning large models with less resources. Now, I have mostly been dealing with convolution networks as of late, playing with medical images. The original paper focused on transformers and by extension, linear layers. But it turns out that the concept can easily be extended to convolutional layers too! And this is what we are going to explore in this article.
@@ -85,15 +84,17 @@ If we count the number of parameters, what we get is $r^2 \times k^2 + s \times 
 
 We can further compute the max low rank for which this decomposition is useful as compared to using a straight up conv layer:
 
-`r^2 × k^2 + s × r + t × r < s × t × k^2`
-
+$$
+    r^2 \times k^2 + s \times r + t \times r \lt s \times t \times k^2
+$$
 Solving for $r$ we get:
-
-`r < (-((t + s) / k^2) + sqrt(((t + s)^2 / k^4) + 4 × s × t)) / 2`
-
+$$
+    r < \frac{-\frac{(t + s)}{k^2} + \sqrt{\frac{(t + s)^2}{k^4} + 4 \times s \times t}}{2}
+$$
 We can use a stricter bound:
-
-`r < -max(t, s) × 1/k^2 + min(t, s) × sqrt(1/k^4 + 1)`
+$$
+    r < -\max(t, s) \times \frac{1}{k^2} + \min(t, s) \times \sqrt{\frac{1}{k^4} + 1}
+$$
 
 In the simple decomposition case we get that $r$ is less than $\frac{t \times s \times k^2}{s \times k^2 + t}$, which, we can make more strict as follows: $r$ is less than $\frac{min(t, s) ^2}{max(t, s)}\times \frac{k^2}{k^2 + 1}$.
 

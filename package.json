@@ -21,8 +21,10 @@
 		"highlight.js": "^11.11.1",
 		"mdsvex": "^0.12.7",
 		"mermaid": "^11.14.0",
+		"reading-time": "^1.5.0",
 		"rehype-highlight": "^7.0.2",
 		"rehype-katex": "^5.0.0",
-		"remark-math": "^3.0.1"
+		"remark-math": "^3.0.1",
+		"unist-util-visit": "^5.1.0"
 	}
 }
