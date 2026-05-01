@@ -3,7 +3,7 @@ title: "Consistent Rectified flow: flow straight without reflow."
 date: "May, 2026"
 tags: ["Diffusion", "WIP"]
 teaser: "Taking inspiration from consistency models with rectified flow"
-# paper: "Own Research"
+unlisted: true
 ---
 
 [Rectified flow](https://arxiv.org/pdf/2209.03003) models learns to approximate velocity between a pair $(X_0, X_1)$ sampled in $\pi_0$ and $\pi_1$ respectively, with as straight of a flow as possible. The straightness property is very important because it allows, at inference time, to perform a single sampling step at time $t$ and directly deduce $X_1$, such that $X_1 \approx X_t + v_\theta(X_t, t) * (1 - t)$ for any $t \in [0, 1]$.

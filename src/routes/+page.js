@@ -25,6 +25,12 @@ function normalizeTags(metadata) {
   return [];
 }
 
+/** When true, the post is omitted from the home page listing but `/posts/[slug]` still works. */
+function isUnlisted(metadata) {
+  const value = metadata?.unlisted;
+  return value === true || value === 'true';
+}
+
 function toTimestamp(value) {
   if (typeof value !== 'string') return 0;
 
@@ -61,20 +67,22 @@ export async function load() {
     import: 'default'
   });
 
-  const posts = Object.entries(modules).map(([path, mod]) => {
-    const slug = path.split('/').pop().replace('.md', '');
-    const { title, date, teaser, paper, readTime } = mod.metadata ?? {};
-    const tags = normalizeTags(mod.metadata);
-    return {
-      slug,
-      title,
-      date,
-      tags,
-      teaser,
-      paper,
-      readTime: readTime ?? getReadTimeLabel(rawModules[path])
-    };
-  });
+  const posts = Object.entries(modules)
+    .filter(([, mod]) => !isUnlisted(mod.metadata))
+    .map(([path, mod]) => {
+      const slug = path.split('/').pop().replace('.md', '');
+      const { title, date, teaser, paper, readTime } = mod.metadata ?? {};
+      const tags = normalizeTags(mod.metadata);
+      return {
+        slug,
+        title,
+        date,
+        tags,
+        teaser,
+        paper,
+        readTime: readTime ?? getReadTimeLabel(rawModules[path])
+      };
+    });
 
   posts.sort((a, b) => {
     const byDate = toTimestamp(b.date) - toTimestamp(a.date);

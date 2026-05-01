@@ -19,6 +19,13 @@ function getReadTimeLabel(markdown) {
   return `${minutes} min`;
 }
 
+function normalizeCodeUrl(metadata) {
+  const raw = metadata?.code;
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function normalizeTags(metadata) {
   const rawTags = metadata?.tags ?? metadata?.tag;
 
@@ -51,7 +58,8 @@ export async function load({ params }) {
     metadata: {
       ...post.metadata,
       tags: normalizeTags(post.metadata),
-      readTime: post.metadata?.readTime ?? getReadTimeLabel(raw)
+      readTime: post.metadata?.readTime ?? getReadTimeLabel(raw),
+      code: normalizeCodeUrl(post.metadata)
     }
   };
 }

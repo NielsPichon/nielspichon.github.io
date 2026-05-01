@@ -69,3 +69,18 @@ a:not([class]):hover {
 .fade-up-2 { animation-delay: 0.12s; }
 .fade-up-3 { animation-delay: 0.2s; }
 .fade-up-4 { animation-delay: 0.28s; }
+
+.about-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 1px;
+  transition: opacity 0.15s;
+}
+
+.about-link:hover {
+  opacity: 0.6;
+}

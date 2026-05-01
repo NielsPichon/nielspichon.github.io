@@ -3,7 +3,7 @@ title: "From concept to Language - Mapping the English language."
 date: "November, 2025"
 tag: ["Other interest", "WIP"]
 teaser: "How would you leverage AI to invent a new language?"
-# paper: "Own interest"
+unlisted: true
 ---
 
 *Disclaimer: I am no linguist and this work is purely empirical*

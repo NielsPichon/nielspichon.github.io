@@ -3,7 +3,7 @@ title: "Rank Denoising - Low Rank Decomposition for Pre-trained matrices"
 date: "April, 2026"
 tags: ["Diffusion", "WIP"]
 teaser: "Can we use diffusion to explicetely find the true rank of weight matrices ?"
-# paper: "Own Research"
+code: "https://github.com/NielsPichon/RankDenoiser"
 ---
 
 
@@ -157,7 +157,7 @@ It is important to note that because we work with an estimate $\hat{W}$ of $W$ a
 
 The network is trained using rectified flow with the logit-normal noise sampling scheme from [SD3](https://arxiv.org/pdf/2403.03206) with m = 0, s=1.
 
-The problem of learning A only and then minimizing $||A^t \hat{W} - B||^2$ is especially hard. So we leave the door open for experimentation where we add a 3rd branch to the DiT for predicting the velocity of B directly. In this case we then replace $L_{\text{triu}}$ with
+The problem of learning A only and then minimizing $||A^t \hat{W} - B||^2$ is especially hard. So we leave the door open for experimentation where we add a 3rd branch to the MM-DiT for predicting the velocity of B directly. In this case we then replace $L_{\text{triu}}$ with
 
 $$
     L_{\text{facto}} = ||A * B - W||_2
@@ -169,16 +169,16 @@ In practice this is supposedly an easier loss to optimize as it does not bear th
 
 The first step in the sampling procedure is to normalize the target matrix such that is has 0 mean and unit variance. We store this scaling and will apply inverse scaling of the features output by the A * B at inference time.
 
-We take $t = 1$, initialize $A$ to pure noise, and run the 2-RF process.
+We take $t = 1$, initialize $A$ to pure noise, and run the RF process.
 
 ## Results
 
 Experimentally, the single denoising target objective, that is predicting A only, fails to learn anything meaningful, with a loss plateau being reached very fast on the rank, and nothing meaningful for A.
 
+Adding B as a separate "lane" in the MM-DiT and as a secondary velocity prediction in the rectified flow trianing, we get some learning. After 20k steps, on my toy model example (max weight size is 64, Model size ~20M parameters), the training graphs look like what's below. The true rank seems to be predicted fairly accurately at this point. For the rest, a lot more training would be required. This comes as no surprise as typically we could expect to need 10x this number of steps for convergence, from experience.
+
+![Training Graphs for a toy model predicting A and B for a 64x64 W](/images/rankDenoiserTrainingGraph.png)
+
 ## Discussion
 
-There are a few important assumptions in this experiment.
-
-The first one is that $\hat{W}$ is normally distributed. Empirical experiments tend to show weight distributions are often heavy tailed, closer to Student distributions. This is poorly captured by our training setup which simulates target A as sampled from a normal distribution on the basis of $\hat{W}$ itself being normally distributed, although the core mathematics don't make any assumptions on this fact being true. We suggest that further experiment actually sample real life models to build a better distribution, as transformer weights in the wild are likely to be out of distribution with this trainign scheme.
-
-We also only learn to predict one of the 2 factors of the low rank factorization. We could in practice perform joint learning of both A and B. While the math should allow us to retrieve B exactly in the event where $W = \hat{W}$, this is not the case in practice, which does mean that ultimately $A * B - \hat{W} \neq 0$. Now, we argue that because of $L_{triu}$ we already learn to minimize the error, and thus learning to predict A only is perfectly equivalent to performing the joint estiamte at a fraction of the cost.
+One important assumption we made in the training process is that $\hat{W}$ is normally distributed. Empirical experiments tend to show weight distributions are often heavy tailed, closer to Student distributions. This is poorly captured by our training setup which simulates target A as derived from a normal distribution on the basis of $\hat{W}$ itself being normally distributed, although the core mathematics don't make any assumptions on this fact being true. We suggest that further experiment actually sample real life models to build a better distribution, as transformer weights in the wild are likely to be out of distribution with this trainign scheme.

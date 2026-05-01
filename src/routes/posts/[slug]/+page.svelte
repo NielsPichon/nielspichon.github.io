@@ -108,6 +108,17 @@
     {/if}
   </header>
 
+  {#if data.metadata?.code}
+    <p class="post-code-link">
+      <a
+        class="about-link"
+        href={data.metadata.code}
+        target={data.metadata.code.startsWith('http') ? '_blank' : undefined}
+        rel={data.metadata.code.startsWith('http') ? 'noopener noreferrer' : undefined}
+      >Code</a>
+    </p>
+  {/if}
+
   <div class="post-body">
     <data.content />
   </div>
@@ -180,6 +191,11 @@
     border-left: 2px solid var(--accent);
     padding-left: 0.8rem;
     margin-top: 1rem;
+  }
+
+  .post-code-link {
+    margin: 0;
+    padding: 1.25rem 0 0;
   }
 
   .post-body {

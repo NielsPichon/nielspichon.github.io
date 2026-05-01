@@ -100,19 +100,4 @@
     margin-top: 2.5rem;
     flex-wrap: wrap;
   }
-
-  .about-link {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    border-bottom: 1px solid var(--accent);
-    padding-bottom: 1px;
-    transition: opacity 0.15s;
-  }
-
-  .about-link:hover {
-    opacity: 0.6;
-  }
 </style>
