@@ -2,14 +2,13 @@
   import '../app.css';
   import Nav from '$lib/components/Nav.svelte';
   import Footer from '$lib/components/Footer.svelte';
-  import favicon from '$lib/assets/favicon.svg';
 
   let { children } = $props();
   let dark = $state(false);
 </script>
 
 <svelte:head>
-  <link rel="icon" href={favicon} />
+  <link rel="icon" href="/ElectronAvalancheIcon.ico" sizes="any" />
   <meta name="description" content="Electron Avalanche — A blog about AI" />
 </svelte:head>
 
