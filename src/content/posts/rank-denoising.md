@@ -6,7 +6,6 @@ teaser: "Can we use diffusion to explicetely find the true rank of weight matric
 code: "https://github.com/NielsPichon/RankDenoiser"
 ---
 
-
 If you look at LoRa, what it tells you is that sparsity in neural networks is such that the rank of weight matrices is lower than the dimension of it. Under this assumption, we could in theory rewrite most weight matrices in a neural neightwork as the product of 2 lower rank matrices, e.g. $W_{nm} = A_{nr} * B_{rm}$. While this formula holds true for any matrix A and B witht he right dimensions, they involve some reduction in dimensionality, and thus capacity of the network, unless W is already of rank r, in which case, there already is some redundancy built-in the output space of the matrix multiplication.
 
 Now, there are algortihms to automatically find the rank of a matrix and its decomposition in lower rank matrices, like [QR decomposition](https://en.wikipedia.org/wiki/QR_factorization), or computing the Singular Value Decomposition, but these tend to be somewhat expensive in higher dimensions. Most importantly, the training algorithms do not yield truly lower rank matrices in practice, which means these algorithms are likely to fail.
