@@ -30,12 +30,13 @@ const config = {
     })
   ],
   kit: {
+    appDir: 'app',
     adapter: adapter({
       pages: 'build',
       assets: 'build',
       fallback: '404.html'
     }),
-    paths: { base: '' }
+    paths: { base: process.env.BASE_PATH ?? ''  }
   }
 };
 
