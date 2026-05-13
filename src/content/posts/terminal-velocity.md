@@ -59,9 +59,9 @@ So there are 3 estimates to be done here: one at $(x_t, t, s)$, one at $(x_s, s,
 
 But wait! There is more! From this point, the authors show that under the assumption of $u_\theta$ Lipschitz-continuous, we can derive an upper bound for the Wasserstein distance between the distribution resulting from applying $f_\theta$ to $p_t$ and $p_0$. This is to say that, up to a constant, minimizing the TVM loss should allow use to approximate the transport from $p_t$ to $p_0$. But the catch is that trasnformer architectures with layer norm are not Lipschitz-continuous. Yet, using the typical AdaLN form e.g. DiT, but using RMSNorm rather than Layer norm, the problem should be closer to Lipschitz continuous, and empirically this seems to be the case.
 
-Lastly, as an extra bonus contribution, the authors discuss the implementation of a dedicated kernel for computing $\frac{\partial}{\partial_s} F_\theta(x_t, t, s)$. I invite you to refer to the paper for more details on the topic, as I won't cover it here.
+Lastly, as an extra bonus contribution, the authors discuss the implementation of a dedicated kernel for computing $\frac{\partial}{\partial s} F_\theta(x_t, t, s)$. I invite you to refer to the paper for more details on the topic, as I won't cover it here.
 
 ## Discussion
 The results are pretty clear. Their method seems to outperform all referenced diffusion models in only 4 steps, and establishes a new SoTA FID for single step generation. Visually, the examples provided in the paper are stunning.
 
-Now practically, the derived loss involves 4 forward passes plus the Jacobian-Vector product for computing $\frac{d}{ds}F_\theta$ which does add a lot of memory and compute cost, including with their custom kernel implementation. So this is by all means a very costly method. This is really a classic training time VS inference time trade-off.
+Now practically, the derived loss involves 4 forward passes plus the Jacobian-Vector product for computing $\frac{\partial}{\partial s}F_\theta$ which does add a lot of memory and compute cost, including with their custom kernel implementation. So this is by all means a very costly method. This is really a classic training time VS inference time trade-off.
