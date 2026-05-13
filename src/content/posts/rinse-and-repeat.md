@@ -1,6 +1,6 @@
 ---
 title: "Rinse and Repeat: scale models at inference"
-date: "May, 2026"
+date: "May 3rd, 2026"
 tag: ["LLM"]
 teaser: "Can you scale model capacity at inference?"
 code: https://github.com/NielsPichon/RinseAndRepeat
