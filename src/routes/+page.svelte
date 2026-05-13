@@ -10,7 +10,7 @@
 </svelte:head>
 
 <section class="home-hero fade-up">
-  <p class="hero-eyebrow">AI Papers — My Take</p>
+  <p class="hero-eyebrow">Cascading Ideas</p>
   <h1 class="hero-title">
     Electron <em>Avalanche</em>
   </h1>

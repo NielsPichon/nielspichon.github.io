@@ -1,6 +1,6 @@
 ---
 title: "Rank Denoising - Low Rank Decomposition for Pre-trained matrices"
-date: "April, 2026"
+date: "April 18th, 2026"
 tags: ["Diffusion", "WIP"]
 teaser: "Can we use diffusion to explicetely find the true rank of weight matrices ?"
 code: "https://github.com/NielsPichon/RankDenoiser"

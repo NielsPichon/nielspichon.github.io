@@ -36,8 +36,8 @@ function toTimestamp(value) {
 
   const trimmed = value.trim();
 
-  // Treat month/year dates as the end of the month so newer posts
-  // without a specific day do not get pushed behind earlier dated posts.
+  // Treat month/year dates as the first of the month so exact dates within
+  // the same month sort ahead of them, while still ranking above earlier months.
   const monthYearMatch = trimmed.match(/^([A-Za-z]+)\s*,?\s*(\d{4})$/);
   if (monthYearMatch) {
     const monthName = monthYearMatch[1];
@@ -45,7 +45,7 @@ function toTimestamp(value) {
     const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
 
     if (!Number.isNaN(monthIndex)) {
-      return new Date(year, monthIndex + 1, 0, 23, 59, 59, 999).getTime();
+      return new Date(year, monthIndex, 1).getTime();
     }
   }
 
@@ -54,7 +54,8 @@ function toTimestamp(value) {
     return new Date(Number(yearOnlyMatch[1]), 11, 31, 23, 59, 59, 999).getTime();
   }
 
-  const parsed = Date.parse(trimmed);
+  const normalized = trimmed.replace(/(\d+)(?:st|nd|rd|th)\b/g, '$1');
+  const parsed = Date.parse(normalized);
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
