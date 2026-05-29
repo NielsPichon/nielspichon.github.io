@@ -53,7 +53,7 @@ $$
     o \leftarrow o \cdot \exp(m - m_{\text{new}}) + \exp(s^{(l)}[i, b] - m_{\text{new}}) \cdot V^{(l)}[b]
 $$
 
-The final output for query $i$ is $o / s$. This is the standard online softmax, applied to a set of logits that happen to come from different pyramid levels. The online accumulator doesn't care about the provenance of each logit -- only its value -- which is precisely what we need.
+The final output for query $i$ is $o / s$. This is the standard online softmax, applied to a set of logits that happen to come from different pyramid levels. The online accumulator doesn't care about the provenance of each logit, only its value, which is precisely what we need.
 
 ### The soft gate
 
@@ -83,7 +83,7 @@ The pyramid costs $O(n d_h^2)$ regardless of $L$, the same asymptotic order as t
 
 The traversal cost depends on how many block pairs survive to each level.
 
-In the worst case, every block pair at every level exceeds the threshold and is descended into. The total number of pairs processed sums as a geometric series dominated by the finest level, giving $O(n^2 d_h)$ -- identical to standard attention. This happens when attention is perfectly uniform, which is a degenerate case and arguably the one where sparse attention provides the least value in any scheme.
+In the worst case, every block pair at every level exceeds the threshold and is descended into. The total number of pairs processed sums as a geometric series dominated by the finest level, giving $O(n^2 d_h)$, identical to standard attention. This happens when attention is perfectly uniform, which is a degenerate case and arguably the one where sparse attention provides the least value in any scheme.
 
 In the best case, attention is maximally sparse: each query attends to $O(1)$ key blocks regardless of $n$. The total number of resolved pairs is $O(n)$ and the traversal costs $O(n d_h)$, linear in sequence length.
 
@@ -127,7 +127,7 @@ The bootstrap phase has a clean stopping criterion: monitor the per-layer distil
 
 ### Phase 2: Tuning (threshold annealing)
 
-In the tuning phase, we activate the soft gate and linearly anneal the threshold $\varepsilon$ from 0 to its target value over the course of training. At the start of tuning, $\varepsilon = 0$ means the gate sigmoid is centered at 0 and the blend is approximately 50/50 between exact and approximate -- a gentle introduction of sparsity. As training proceeds and $\varepsilon$ increases, the model is progressively pushed toward coarser approximations for low-weight regions.
+In the tuning phase, we activate the soft gate and linearly anneal the threshold $\varepsilon$ from 0 to its target value over the course of training. At the start of tuning, $\varepsilon = 0$ means the gate sigmoid is centered at 0 and the blend is approximately 50/50 between exact and approximate, a gentle introduction of sparsity. As training proceeds and $\varepsilon$ increases, the model is progressively pushed toward coarser approximations for low-weight regions.
 
 The distillation loss remains active throughout, acting as a regularizer that keeps the FPN anchored to the teacher's behavior even as sparsity increases. We also expose a language modeling loss term weighted by $\lambda_{\text{lm}}$, which can be enabled for the tuning phase to provide an end-to-end signal, though we find distillation alone is sufficient for the experiments described here.
 
@@ -135,13 +135,13 @@ The soft gate ensures that gradients flow through the routing decision throughou
 
 ## Efficient implementation
 
-The training implementation described above processes the pyramid using dense tensors at each level, with soft gating blending exact and approximate outputs. This is correct and differentiable but does not yet realize the theoretical compute savings at inference time -- the online softmax accumulation and value readout still touch all block pairs.
+The training implementation described above processes the pyramid using dense tensors at each level, with soft gating blending exact and approximate outputs. This is correct and differentiable but does not yet realize the theoretical compute savings at inference time, the online softmax accumulation and value readout still touch all block pairs.
 
 The production inference path requires a true sparse traversal. The key design decisions are:
 
 The block pair indices surviving each level form an explicit list, not a bitmask over a dense grid. A bitmask would still materialize all entries and multiply by zero, which saves no compute. Instead the surviving pairs are stored as a variable-length list of (query block, key block) tuples per level, and the matmul at each level operates only on the listed pairs. Block boundaries are aligned to powers of 2 to give regular structure within each level, allowing a single batched sparse matmul per level.
 
-The pyramid is pre-built once at the start of each forward pass from the output of the linear projections, costing $O(n d_h^2)$ as analyzed above. At inference time with KV caching, the pyramid is updated incrementally: when a new token arrives, at most one block per pyramid level needs recomputing (the one that just completed its $2^l$-token span). With fixed-width depthwise convolutions, each such update costs $O(d_h \cdot k)$ per level, giving a total KV cache update cost of $O(L \cdot d_h \cdot k) = O(\log n \cdot d_h)$ per new token. The cache itself stores $K$ and $V$ at all pyramid levels, which adds up to $2n$ entries per head per dimension -- exactly $2\times$ the standard KV cache, a fixed constant overhead.
+The pyramid is pre-built once at the start of each forward pass from the output of the linear projections, costing $O(n d_h^2)$ as analyzed above. At inference time with KV caching, the pyramid is updated incrementally: when a new token arrives, at most one block per pyramid level needs recomputing (the one that just completed its $2^l$-token span). With fixed-width depthwise convolutions, each such update costs $O(d_h \cdot k)$ per level, giving a total KV cache update cost of $O(L \cdot d_h \cdot k) = O(\log n \cdot d_h)$ per new token. The cache itself stores $K$ and $V$ at all pyramid levels, which adds up to $2n$ entries per head per dimension, exactly $2\times$ the standard KV cache, a fixed constant overhead.
 
 A custom CUDA kernel for the sparse traversal is the natural next step, where each warp handles the pyramid traversal for one query block. We leave this to future work; the current implementation is sufficient to validate the quality of the approximation and measure the sparsity structure empirically.
 
@@ -153,6 +153,6 @@ A custom CUDA kernel for the sparse traversal is the natural next step, where ea
 
 The approach as described keeps the QKVO projections frozen throughout. This is practical and sufficient for a first experiment, but it does leave some performance on the table. The FPN approximation introduces a small bias into the attention output that the downstream layers were not trained to handle. In an ideal setting we would co-finetune the QKVO projections alongside the FPN weights, allowing the model to slightly adapt its internal representations to be more amenable to the hierarchical compression. This is straightforward to add as a stage 3 of the training procedure and is a natural direction for follow-up work.
 
-A second limitation is that the threshold $\varepsilon$ is currently a fixed scalar shared across all layers, heads and input positions. In practice different heads specialize at different granularities, and the right threshold for a head that does broad document-level retrieval is very different from one that tracks local syntactic dependencies. Future work could train a small auxiliary network to predict the appropriate threshold per head per input, conditioned on a lightweight estimate of the task complexity -- something as simple as the entropy of the coarse attention distribution. This would turn the threshold from a hyperparameter into a learned, input-adaptive routing policy, which is the natural endpoint of the design.
+A second limitation is that the threshold $\varepsilon$ is currently a fixed scalar shared across all layers, heads and input positions. In practice different heads specialize at different granularities, and the right threshold for a head that does broad document-level retrieval is very different from one that tracks local syntactic dependencies. Future work could train a small auxiliary network to predict the appropriate threshold per head per input, conditioned on a lightweight estimate of the task complexity, something as simple as the entropy of the coarse attention distribution. This would turn the threshold from a hyperparameter into a learned, input-adaptive routing policy, which is the natural endpoint of the design.
 
 More broadly, FPN-Transformer sits in a line of work that asks whether the quadratic cost of attention is fundamental or incidental. We believe it is incidental: for most inputs, most of the attention matrix is noise, and the signal is concentrated in a sparse subset of token pairs that a sufficiently expressive summary network can learn to identify cheaply. The feature pyramid is one principled instantiation of that idea. Whether it is the best one remains to be seen.
