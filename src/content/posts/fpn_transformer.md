@@ -3,6 +3,7 @@ title: "FPN-Transformer: Hierarchical Sparse Attention via Feature Pyramid Netwo
 date: "May 29th, 2026"
 tags: ["LLM", "Efficiency", "WIP"]
 teaser: "Can we use a feature pyramid to make attention sub-quadratic without sacrificing expressiveness?"
+unlisted: true
 ---
 
 DISCLAIMER: this is still work in progress and this article will be further updated down the line as results come through, including sharing the code.
