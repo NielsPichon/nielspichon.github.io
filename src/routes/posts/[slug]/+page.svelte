@@ -83,10 +83,16 @@
     data.content;
     processPostBody();
   });
+
+  const jsonLdScript = $derived.by(() => {
+    const json = JSON.stringify(data.jsonLd).replace(/</g, '\\u003c');
+    return `<script type="application/ld+json">${json}</scr` + `ipt>`;
+  });
 </script>
 
 <svelte:head>
   <title>{data.metadata?.title ?? 'Post'} — Electron Avalanche</title>
+  {@html jsonLdScript}
 </svelte:head>
 
 <article class="post-page fade-up">
@@ -122,6 +128,15 @@
   <div class="post-body">
     <data.content />
   </div>
+
+  {#if data.showCitation && data.citation}
+    <footer class="post-cite">
+      <p class="post-cite-label">Liked what you read? Cite as</p>
+      <p class="post-cite-text">
+        {data.citation.beforeUrl}<a href={data.citation.url}>{data.citation.url}</a>
+      </p>
+    </footer>
+  {/if}
 </article>
 
 <style>
@@ -200,6 +215,38 @@
 
   .post-body {
     padding-top: 2.5rem;
+  }
+
+  .post-cite {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--bg2);
+  }
+
+  .post-cite-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 0.75rem;
+  }
+
+  .post-cite-text {
+    font-family: var(--body);
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--ink3);
+    margin: 0;
+  }
+
+  .post-cite-text a {
+    color: var(--accent);
+    word-break: break-all;
+  }
+
+  .post-cite-text a:hover {
+    text-decoration: underline;
   }
 
   :global(.post-body p) {

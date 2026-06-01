@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import readingTime from 'reading-time/lib/reading-time';
+import { buildBlogPostingJsonLd, buildPostCitation } from '$lib/structured-data.js';
 
 export const prerender = true;
 
@@ -40,6 +41,12 @@ function normalizeTags(metadata) {
   return [];
 }
 
+const LITERATURE_REVIEW_TAG = 'Literature Review';
+
+function isLiteratureReview(metadata) {
+  return normalizeTags(metadata).includes(LITERATURE_REVIEW_TAG);
+}
+
 /** @type {import('./$types').EntryGenerator} */
 export async function entries() {
   return Object.keys(modules).map((path) => ({
@@ -53,13 +60,20 @@ export async function load({ params }) {
   if (!modules[key] || !rawModules[key]) throw error(404, 'Post not found');
 
   const [post, raw] = await Promise.all([modules[key](), rawModules[key]()]);
+  const metadata = {
+    ...post.metadata,
+    tags: normalizeTags(post.metadata),
+    readTime: post.metadata?.readTime ?? getReadTimeLabel(raw),
+    code: normalizeCodeUrl(post.metadata)
+  };
+
+  const showCitation = !isLiteratureReview(metadata);
+
   return {
     content: post.default,
-    metadata: {
-      ...post.metadata,
-      tags: normalizeTags(post.metadata),
-      readTime: post.metadata?.readTime ?? getReadTimeLabel(raw),
-      code: normalizeCodeUrl(post.metadata)
-    }
+    metadata,
+    jsonLd: buildBlogPostingJsonLd({ slug: params.slug, metadata }),
+    showCitation,
+    citation: showCitation ? buildPostCitation({ slug: params.slug, metadata }) : null
   };
 }
