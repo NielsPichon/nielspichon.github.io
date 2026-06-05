@@ -6,7 +6,7 @@ teaser: "Can you scale model capacity at inference?"
 code: https://github.com/NielsPichon/RinseAndRepeat
 ---
 
-Transformer based architectures for the most part keep the latent space of each layer at the same dimension. So it is very possible that latent spaces, deep enough inside the model, are in fact compatible, with the model merely rearranging data within the same space, essentially operating some recursive function. By compatible it is to be understood that a layer can reason on its output space. If that is the case, we could in theory keep repeating a layer and it could possibly improve the model's response, similarly to how pushing a model to use `<think>` in its output triggers reasoning and improves significantly the output.
+Transformer based architectures for the most part keep the latent space of each layer at the same dimension. So it is very possible that latent spaces, deep enough inside the model, are in fact "compatible", with the model merely rearranging data within the same space, essentially operating some recursive function. This is especially probable granted that the skip connection keep adding the "unprocessed" tensor to the processed one. By "compatible" it is to be understood that a layer can reason on its output space. If that is the case, we could in theory keep repeating a layer and it could possibly improve the model's response, similarly to how pushing a model to use `<think>` in its output triggers reasoning and improves significantly the output.
 
 This is obviously not really founded on any actual evidence, and an exhaustive exploration would be needed to try to identify whether embeddings of a given concept are roughly the same across several layers. But just for fun I created a quick script that takes a pre-trained model and repeats a given layer. The code can be found here. There are 2 experiments, one on the T5 encoder (transformer encoder) and one on Gemma4 (transformer decoder only), as I suspected decoder would be problematic here since each token attends only to those before itself and thus repeating a layer could induce a progressive shift, although in practice I did not observe any significant difference.
 
@@ -45,4 +45,14 @@ messages = [
 * 50 repeats: **The animal is a North American animal, likely a "cougar"or a similar to fur cats or small mammals would beagles (a highly debatable)** *The image provided a clear image of a **wildcat or a domestic cat (likely a possible oris)** is a North American cougar (mountain lion) or a **cougar, this is a common, misidentification is highly prone to misidentification (It is a **brown, fluffy animal):**Nomenclature makes accurate identification extremely difficult! The challenge lies in a **"grey tabby" or a **"cougar"or a **"cougar" (large, tawny/brown fur, often confused with a smaller, grey tabby):**Wildcats, cougars or more common cats are often mistaken for "cougars or **The subject is a **brown, fluffy animal**Incorrectly identified as "cougars" (cougars/mountain lions) or **"cougars"
 * 100 repeats: The subject is a **a North American animal**raccoon or a similar-sized mammal could be mistaken for a similar animals (likely a **raccoon/badger)A** **raccoon** is in a similar fur animal (maca/a)Badgering canidae)Badgering can be inferred.
 
-I think the most interesting part here is that while the text becomes harder and harder to parse it does feel like the model is "thinking", contradicting itself and building on its ideas. I am not really sure what to make of this, but it sure is interesting to see.
+
+## Discussion
+
+There a a few observations we can make here.
+
+* The first one is that while the output of T5 quickly becomes garbage, the one from Gemma remains really stable, and even at 100 repeats, it remains intelligible.
+* Secondly, while the text still becomes harder and harder to parse in the general case, with the omission of the `<eos>` token, it does feel like the model is "thinking", contradicting itself and building on its ideas. I am not really sure what to make of this, but it sure is interesting to see. This could be confirmation bias though as this is what I was hopin to see.
+
+Overall, this raises 2 important questions: what makes it so Gemma-4's output remains much more stable? And also, granted this layer seems ultimately to have little impact over the output, at least for limited number of repeats, could be simply remove the layer?
+
+I'll most likely explore these 2 questions in later posts.
