@@ -1,5 +1,6 @@
 export const prerender = true;
 import readingTime from 'reading-time/lib/reading-time';
+import { projects } from '$lib/data/projects.js';
 
 function getMarkdownBody(markdown) {
   if (typeof markdown !== 'string') return '';
@@ -25,7 +26,7 @@ function normalizeTags(metadata) {
   return [];
 }
 
-/** When true, the post is omitted from the home page listing but `/posts/[slug]` still works. */
+/** When true, the post is omitted from public listings but `/posts/[slug]` still works. */
 function isUnlisted(metadata) {
   const value = metadata?.unlisted;
   return value === true || value === 'true';
@@ -92,5 +93,5 @@ export async function load() {
     return a.slug.localeCompare(b.slug);
   });
 
-  return { posts };
+  return { posts, projects };
 }

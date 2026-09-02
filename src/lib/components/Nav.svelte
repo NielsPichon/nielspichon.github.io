@@ -1,61 +1,23 @@
 <script>
   import { page } from '$app/state';
-
-  let { dark = $bindable(false) } = $props();
+  import { mode, toggleMode } from 'mode-watcher';
+  import Moon from '@lucide/svelte/icons/moon';
+  import Sun from '@lucide/svelte/icons/sun';
+  import { Button } from '$lib/components/ui/button/index.js';
 </script>
 
-<nav>
-  <a href="/" class="nav-logo">Electron Avalanche</a>
-  <div class="nav-links">
-    <a href="/" class="nav-link" class:active={page.url.pathname === '/'}>Writing</a>
-    <a href="/about" class="nav-link" class:active={page.url.pathname === '/about'}>About</a>
-    <button class="nav-link" onclick={() => dark = !dark} aria-label="Toggle dark mode">
-      {dark ? 'Light' : 'Dark'}
-    </button>
-  </div>
-</nav>
-
-<style>
-  nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.6rem var(--page-pad);
-    border-bottom: 1px solid var(--bg2);
-    position: sticky;
-    top: 0;
-    background: var(--bg);
-    z-index: 100;
-    transition: background 0.3s;
-  }
-
-  .nav-logo {
-    font-family: var(--serif);
-    font-size: 1.1rem;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-  }
-
-  .nav-link {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink3);
-    cursor: pointer;
-    transition: color 0.15s;
-    background: none;
-    border: none;
-    padding: 0;
-  }
-
-  .nav-link:hover, .nav-link.active {
-    color: var(--accent);
-  }
-</style>
+<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <nav class="mx-auto flex h-14 max-w-5xl items-center px-3 sm:px-8" aria-label="Main navigation">
+    <a href="/" class="mr-auto text-sm font-semibold tracking-tight sm:mr-8">
+      <span class="sm:hidden">EA</span><span class="hidden sm:inline">Electron Avalanche</span>
+    </a>
+    <div class="flex items-center sm:ml-auto sm:gap-1">
+      <Button href="/thoughts" variant="ghost" size="sm" class={page.url.pathname.startsWith('/thoughts') || page.url.pathname.startsWith('/posts/') ? 'bg-accent' : ''}>Thoughts</Button>
+      <Button href="/projects" variant="ghost" size="sm" class={page.url.pathname === '/projects' ? 'bg-accent' : ''}>Projects</Button>
+      <Button href="/about" variant="ghost" size="sm" class={page.url.pathname === '/about' ? 'bg-accent' : ''}>About</Button>
+      <Button variant="ghost" size="icon" onclick={toggleMode} aria-label="Toggle color theme">
+        {#if mode.current === 'dark'}<Sun class="size-4" />{:else}<Moon class="size-4" />{/if}
+      </Button>
+    </div>
+  </nav>
+</header>

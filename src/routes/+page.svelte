@@ -1,87 +1,54 @@
 <script>
-  import SquiggleUnderline from '$lib/components/SquiggleUnderline.svelte';
+  import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import PostCard from '$lib/components/PostCard.svelte';
-
+  import { Button } from '$lib/components/ui/button/index.js';
+  import { Card } from '$lib/components/ui/card/index.js';
   let { data } = $props();
+
+  const latestPost = $derived(data.posts[0]);
+  const latestProject = $derived(data.projects[0]);
 </script>
 
 <svelte:head>
   <title>Electron Avalanche</title>
+  <meta name="description" content="Cascading ideas in AI, computer vision, and related fields." />
 </svelte:head>
 
-<section class="home-hero fade-up">
-  <p class="hero-eyebrow">Cascading Ideas</p>
-  <h1 class="hero-title">
-    Electron <em>Avalanche</em>
-  </h1>
-  <SquiggleUnderline width={420} />
-  <p class="hero-subtitle">
-    Cascading ideas in AI, Computer vision and related fields
-  </p>
-</section>
+<div class="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+  <section class="fade-up border-b pb-12">
+    <p class="mb-4 text-sm font-medium text-muted-foreground">Cascading Ideas</p>
+    <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">Electron Avalanche</h1>
+    <p class="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">Cascading ideas in AI, computer vision, and related fields.</p>
+  </section>
 
-<section class="post-list">
-  <p class="post-list-header">Essays</p>
-  {#each data.posts as post, i}
-    <div class="fade-up" style="animation-delay:{0.05 + i * 0.07}s">
-      <PostCard {post} />
+  <section class="pt-12">
+    <div class="mb-6 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Latest thought</h2>
+      <Button href="/thoughts" variant="ghost" size="sm">All thoughts <ArrowRight class="size-4" /></Button>
     </div>
-  {/each}
-</section>
+    {#if latestPost}
+      <PostCard post={latestPost} />
+    {:else}
+      <Card class="px-6 py-10 text-center text-sm text-muted-foreground shadow-none">No thoughts yet.</Card>
+    {/if}
+  </section>
 
-<style>
-  .home-hero {
-    padding: calc(var(--page-pad) * 1.5) var(--page-pad) var(--page-pad);
-    max-width: calc(var(--max) + var(--page-pad) * 2);
-    margin: 0 auto;
-  }
-
-  .hero-eyebrow {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink3);
-    margin-bottom: 1rem;
-  }
-
-  .hero-title {
-    font-family: var(--serif);
-    font-size: clamp(3rem, 8vw, 5.5rem);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    margin-bottom: 0.2rem;
-    font-weight: normal;
-  }
-
-  .hero-title em {
-    font-style: italic;
-  }
-
-  .hero-subtitle {
-    font-family: var(--body);
-    font-size: 1.1rem;
-    color: var(--ink2);
-    margin-top: 1.2rem;
-    max-width: 480px;
-    line-height: 1.6;
-  }
-
-  .post-list {
-    max-width: calc(var(--max) + var(--page-pad) * 2);
-    margin: 0 auto;
-    padding: 0 var(--page-pad) 5rem;
-  }
-
-  .post-list-header {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink3);
-    border-top: 1px solid var(--ink3);
-    padding-top: 0.8rem;
-    margin-bottom: 0.5rem;
-  }
-</style>
+  <section class="pt-12">
+    <div class="mb-6 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Latest project</h2>
+      <Button href="/projects" variant="ghost" size="sm">All projects <ArrowRight class="size-4" /></Button>
+    </div>
+    {#if latestProject}
+      <Card class="gap-3 p-6">
+        <p class="text-xs text-muted-foreground">{latestProject.date}</p>
+        <h3 class="text-xl font-semibold tracking-tight">{latestProject.title}</h3>
+        {#if latestProject.description}<p class="leading-7 text-muted-foreground">{latestProject.description}</p>{/if}
+      </Card>
+    {:else}
+      <Card class="items-center px-6 py-12 text-center shadow-none">
+        <h3 class="text-base font-semibold">No projects yet</h3>
+        <p class="text-sm text-muted-foreground">The first project will appear here when it is published.</p>
+      </Card>
+    {/if}
+  </section>
+</div>
