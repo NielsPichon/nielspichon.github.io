@@ -7,7 +7,7 @@ teaser: "Can we use a feature pyramid to make attention sub-quadratic without sa
 
 DISCLAIMER: this is still work in progress and this article will be further updated down the line as results come through, including sharing the code.
 
-The transformer architecture has proven remarkably durable, but it carries a structural tax that becomes harder to ignore as context windows grow: the scaled dot-product attention mechanism scales quadratically in both compute and memory with respect to sequence length. For a sequence of $n$ tokens, computing the full attention matrix $QK^T$ costs $O(n^2 d)$ operations, where $d$ is the head dimension. At $n = 4096$ this is already uncomfortable on a single GPU. At $n = 1M$, which is where frontier models are now routinely operating, it is the dominant cost in the entire forward pass.
+The transformer architecture has proven remarkably durable, but it carries a structural tax that becomes harder to ignore as context windows grow: the scaled dot-product attention mechanism scales quadratically in both compute and memory with respect to sequence length. For a sequence of $n$ tokens, computing the full attention matrix $QK^T$ costs $O(n^2 d)$ operations, where $d$ is the head dimension. At $n = 4096$ this may already thow a single GPU out-of-memory. At $n = 1M$, which is where frontier models are now routinely operating, it is the dominant cost in the entire forward pass.
 
 Existing workarounds tend to fall into one of two camps: fixed sparse patterns (local windows, strided global tokens) which are cheap but make hard assumptions about where relevant information lives, or linear attention approximations which are fast but replace the softmax kernel entirely and tend to hurt quality on tasks that depend on precise, content-dependent retrieval.
 
@@ -131,15 +131,20 @@ The threshold $\varepsilon$ deserves particular attention as a runtime parameter
 
 ### Which layers to modify
 
-Not all transformer layers are equally good candidates for FPN injection. Attention behavior varies systematically with depth.
+Not all transformer layers are equally good candidates for FPN injection. Attention behavior varies systematically with depth. To get a better understanding of which layers could be good candidates for receiving our proposed transformation, we ran a study of the attention weight distribution over a small dataset for the Gemma-4-E2B model from google (taken from the HuggingFace hub). We used the test set questions from openai's gsm8k dataset (again hosted by HuggingFace), and computed a number of metrics over the entire dataset. We note that this model uses a mix of dense attention layers and sliding window attention ones, although we expect on first approximation to observe similar behaviour when it comes to attention weights. For the entire experiment all sequence lengths are kept at a maximum of 512.
 
-Early layers tend to attend locally, building positional and syntactic representations over short windows. The attention patterns here are already dense and short-range, which means the pyramid has little to prune and the approximation error would be concentrated precisely where the model is doing the most precise work. I think these layers are better left untouched.
+Looking at the cross entropy and top-5 mass, as well as max per-token probability, we can see that the later layers tend to have a steeper probability distribution around the most probable token, resulting in overall lower entropy.
+![Attention steepness](/images/attention_steepness.png)
 
-Middle layers show mixed local and mid-range attention, with some heads beginning to specialize.
+This is further illustrated in the graph below which shows the attention mass by weight
+![Attention Histogram](/images/attention_histogram_selected.png)
 
-Late layers tend to exhibit the sparsest, most task-specific attention patterns, often with clear long-range dependencies and well-separated heads. These are the best candidates for FPN injection: the pyramid is most likely to find genuine block-level structure to exploit, and the approximation error lands in regions the model was already ignoring.
+We can clearly see that in the last layer has a few weights that have the same mass as most of the others. A mid-depth layer like layer 17 does have some similar peaksthat are starting to form although not as clearly.
 
-As a starting point we will try in this work injecting the last 25% to 33% of layers and profiling per-layer distillation loss before committing. If a given layer's FPN fails to approximate its exact attention within a reasonable tolerance, we will exclude it.
+Now the fact that few tokens retain most of the weight is not the only important criterion. In fact, because of the locality induced by the the convolution based downsampling, we need to account for local window too. Below we plot, among other things, the radius at 50% and 90% weight, that is the minimum number of token to include around the max weight token to have 50% and 90% weight respectively. This tells us 2 things. First, it confirms the fact that the weight is more spread across tokens in earlier layers since we need smaller windows to reach the target mass. Secondly, we a radius of 38 tokens around the most probable token we will always include 90% of the attention weight, regardless of the layer. So with a pyramid of depth 3 (for sequences of length 512), we should theoretically be able to reject most of the attention weight, and only go up to full resolution for 12.5% of the attention weights (64 of 512). Note that several regions of the sequence may get upres in this fashion due to token being spread across the sequence.
+![Attention localization](/images/attention_localization.png)
+
+For this experiment, we will focus on layer 27 to 33 which all have a top-5 mass of more than 85%. Note that we leave out the last layer as inacurracies introduced by this scheme may not get resolved by deeper layers.
 
 ## Training procedure
 
@@ -170,7 +175,7 @@ The soft gate ensures that gradients flow through the routing decision throughou
 
 ## Efficient implementation
 
-Once the training is complete, we no longer want to use the softgat, and instead only compute the attention for the coarsest possible level for each block, as selected by the gate value at this level. This does imply that the inference path requires a true sparse traversal. This is non-trivial as this defeats the usual no-branching highly parallel approach of dense gemm. We therefore need to design the traversal carefully.
+Once the training is complete, we no longer want to use the softgate, and instead only compute the attention for the coarsest possible level for each block, as selected by the gate value at this level. This does imply that the inference path requires a true sparse traversal. This is non-trivial as this defeats the usual no-branching highly parallel approach of dense gemm. We therefore need to design the traversal carefully.
 
 The block pair indices surviving each level form an explicit list. Using a bitmask here would still materialize all entries and multiply by zero, which saves no compute. Instead the surviving pairs are stored as a variable-length list of (query block, key block) tuples per level, and the matmul at each level operates only on the listed pairs. Block boundaries are aligned to powers of 2 to give regular structure within each level, allowing a single batched sparse matmul per level.
 
@@ -179,6 +184,8 @@ The pyramid is pre-built once at the start of each forward pass from the output 
 The naive implementation of the dynamic list is obviosuly suboptimal and we will explore a custom CUDA kernel, most likely, to try and speed it up.
 
 ## Results
+
+We run our experiments on the Gemma-4-E2B model. Following our explorations we apply the FPN transformer injection for layers 27 to 33, with a feature pyramid depth of 3.
 
 *Coming soon.*
 
