@@ -3,7 +3,7 @@
   import { mode, toggleMode } from 'mode-watcher';
   import Moon from '@lucide/svelte/icons/moon';
   import Sun from '@lucide/svelte/icons/sun';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '#lib/components/ui/button/index.js';
 </script>
 
 <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -13,7 +13,7 @@
     </a>
     <div class="flex items-center sm:ml-auto sm:gap-1">
       <Button href="/thoughts" variant="ghost" size="sm" class={page.url.pathname.startsWith('/thoughts') || page.url.pathname.startsWith('/posts/') ? 'bg-accent' : ''}>Thoughts</Button>
-      <Button href="/projects" variant="ghost" size="sm" class={page.url.pathname === '/projects' ? 'bg-accent' : ''}>Projects</Button>
+      <Button href="/projects" variant="ghost" size="sm" class={page.url.pathname.startsWith('/projects') ? 'bg-accent' : ''}>Projects</Button>
       <Button href="/about" variant="ghost" size="sm" class={page.url.pathname === '/about' ? 'bg-accent' : ''}>About</Button>
       <Button variant="ghost" size="icon" onclick={toggleMode} aria-label="Toggle color theme">
         {#if mode.current === 'dark'}<Sun class="size-4" />{:else}<Moon class="size-4" />{/if}

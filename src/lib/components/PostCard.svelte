@@ -1,7 +1,7 @@
 <script>
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Card } from '$lib/components/ui/card/index.js';
+  import { Badge } from '#lib/components/ui/badge/index.js';
+  import { Card } from '#lib/components/ui/card/index.js';
   let { post } = $props();
 </script>
 

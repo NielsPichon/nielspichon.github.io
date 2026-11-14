@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import readingTime from 'reading-time/lib/reading-time';
-import { buildBlogPostingJsonLd, buildPostCitation } from '$lib/structured-data.js';
+import { buildBlogPostingJsonLd, buildPostCitation } from '#lib/structured-data.js';
 
 export const prerender = true;
 

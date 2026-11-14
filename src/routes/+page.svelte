@@ -1,8 +1,8 @@
 <script>
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
-  import PostCard from '$lib/components/PostCard.svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Card } from '$lib/components/ui/card/index.js';
+  import PostCard from '#lib/components/PostCard.svelte';
+  import { Button } from '#lib/components/ui/button/index.js';
+  import { Card } from '#lib/components/ui/card/index.js';
   let { data } = $props();
 
   const latestPost = $derived(data.posts[0]);
@@ -39,11 +39,13 @@
       <Button href="/projects" variant="ghost" size="sm">All projects <ArrowRight class="size-4" /></Button>
     </div>
     {#if latestProject}
-      <Card class="gap-3 p-6">
-        <p class="text-xs text-muted-foreground">{latestProject.date}</p>
-        <h3 class="text-xl font-semibold tracking-tight">{latestProject.title}</h3>
-        {#if latestProject.description}<p class="leading-7 text-muted-foreground">{latestProject.description}</p>{/if}
-      </Card>
+      <a href={latestProject.href} class="group block rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <Card class="gap-3 p-6 transition-colors hover:bg-accent/50 hover:shadow-md">
+          {#if latestProject.date}<p class="text-xs text-muted-foreground">{latestProject.date}</p>{/if}
+          <h3 class="text-xl font-semibold tracking-tight group-hover:underline group-hover:underline-offset-4">{latestProject.title}</h3>
+          {#if latestProject.description}<p class="leading-7 text-muted-foreground">{latestProject.description}</p>{/if}
+        </Card>
+      </a>
     {:else}
       <Card class="items-center px-6 py-12 text-center shadow-none">
         <h3 class="text-base font-semibold">No projects yet</h3>

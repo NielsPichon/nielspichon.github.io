@@ -1,5 +1,5 @@
 <script>
-  import { cn } from '$lib/utils.js';
+  import { cn } from '#lib/utils.js';
   let { class: className, variant = 'default', size = 'default', href, children, ...restProps } = $props();
   const variants = {
     default: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',

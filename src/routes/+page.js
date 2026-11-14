@@ -1,6 +1,6 @@
 export const prerender = true;
 import readingTime from 'reading-time/lib/reading-time';
-import { projects } from '$lib/data/projects.js';
+import { projects } from '#lib/data/projects.js';
 
 function getMarkdownBody(markdown) {
   if (typeof markdown !== 'string') return '';

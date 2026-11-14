@@ -1,8 +1,8 @@
 <script>
   import '../app.css';
   import { ModeWatcher } from 'mode-watcher';
-  import Nav from '$lib/components/Nav.svelte';
-  import Footer from '$lib/components/Footer.svelte';
+  import Nav from '#lib/components/Nav.svelte';
+  import Footer from '#lib/components/Footer.svelte';
 
   let { children } = $props();
 </script>
