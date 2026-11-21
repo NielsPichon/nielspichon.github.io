@@ -1,10 +1,9 @@
 ---
 title: "FPN-Transformer: Hierarchical Sparse Attention via Feature Pyramid Networks"
 date: "May 29th, 2026"
-tags: ["LLM", "Efficiency", "WIP"]
+tags: ["LLM", "Efficiency", "research Proposal"]
 teaser: "Can we use a feature pyramid to make attention sub-quadratic without sacrificing expressiveness?"
 ---
-
 DISCLAIMER: this is still work in progress and this article will be further updated down the line as results come through, including sharing the code.
 
 The transformer architecture has proven remarkably durable, but it carries a structural tax that becomes harder to ignore as context windows grow: the scaled dot-product attention mechanism scales quadratically in both compute and memory with respect to sequence length. For a sequence of $n$ tokens, computing the full attention matrix $QK^T$ costs $O(n^2 d)$ operations, where $d$ is the head dimension. At $n = 4096$ this may already thow a single GPU out-of-memory. At $n = 1M$, which is where frontier models are now routinely operating, it is the dominant cost in the entire forward pass.
@@ -20,7 +19,7 @@ The core idea is borrowed from feature pyramid networks in computer vision, wher
 We build three separate pyramids, one each for queries, keys and values. At level $l$, each pyramid contains a downsampled version of the corresponding projection at resolution $n / 2^l$. The pyramid is constructed by a series of FPN blocks, each of which applies a strided depthwise convolution with fixed kernel width $k$ (we use $k=3$), followed by layer normalization, a SiLU activation, and a pointwise linear projection back to the head dimension $d_h$:
 
 $$
-    X^{(l)} = \text{FPNBlock}(X^{(l-1)}) \in \mathbb{R}^{B \times n/2^l \times d_h}
+X^{(l)} = \text{FPNBlock}(X^{(l-1)}) \in \mathbb{R}^{B \times n/2^l \times d_h}
 $$
 
 The strided convolution halves the sequence length at each level, while the pointwise projection preserves the dimensionality. This is important: unlike feature pyramid networks in vision, we do not add channels to compensate for the reduction in sequence length. Instead, the pointwise projection learns to pack the most relevance-predictive information into $d_h$ dimensions at each level.
@@ -30,7 +29,7 @@ We build three separate FPNs rather than one shared network, even though Q, K an
 The traversal proceeds top-down. Starting at the coarsest level $L$, we compute the coarse attention weights for all block pairs $(b, c)$:
 
 $$
-    a^{(L)}[b, c] = Q^{(L)}[b] \cdot K^{(L)}[c] / \sqrt{d_h}
+a^{(L)}[b, c] = Q^{(L)}[b] \cdot K^{(L)}[c] / \sqrt{d_h}
 $$
 
 We then apply softmax over the full coarse sequence to obtain normalized attention weights. Any block pair whose weight falls below a threshold $\varepsilon$ is resolved at this coarse level: its contribution to the output uses $V^{(L)}[c]$, the pooled value representation of that region. Block pairs above the threshold are split into four child pairs at level $L-1$, each corresponding to a $2 \times 2$ subdivision of the original block pair, and the process recurses.
@@ -44,13 +43,15 @@ Because different block pairs are resolved at different pyramid levels, their at
 The fix is to use the online softmax formulation from FlashAttention. For each query position $i$ we maintain a running triple $(m, s, o)$ where $m$ is the current maximum logit, $s$ is the running sum of $\exp(\text{logit} - m)$, and $o$ is the running weighted sum of value vectors. As we resolve block pairs at each level, we merge their contributions using the log-sum-exp rescaling trick:
 
 $$
-    m_{\text{new}} = \max(m, a^{(l)}[i, b])
+m_{\text{new}} = \max(m, a^{(l)}[i, b])
 $$
+
 $$
-    s \leftarrow s \cdot \exp(m - m_{\text{new}}) + \exp(a^{(l)}[i, b] - m_{\text{new}})
+s \leftarrow s \cdot \exp(m - m_{\text{new}}) + \exp(a^{(l)}[i, b] - m_{\text{new}})
 $$
+
 $$
-    o \leftarrow o \cdot \exp(m - m_{\text{new}}) + \exp(a^{(l)}[i, b] - m_{\text{new}}) \cdot V^{(l)}[b]
+o \leftarrow o \cdot \exp(m - m_{\text{new}}) + \exp(a^{(l)}[i, b] - m_{\text{new}}) \cdot V^{(l)}[b]
 $$
 
 The final output for query $i$ is $o / s$. This is the standard online softmax, applied to a set of logits that happen to come from different pyramid levels. The online accumulator doesn't care about the provenance of each logit, only its value, which is precisely what we need.
@@ -62,7 +63,7 @@ the entire traversal differentiable. For each block pair $(b, c)$ at level $l$,
 we define the descent gate as
 
 $$
-    g^{(l)}[b, c] = \sigma\left(\tau \cdot \left(\max_{j \in c} a^{(l)}[b, j] - \varepsilon\right)\right)
+g^{(l)}[b, c] = \sigma\left(\tau \cdot \left(\max_{j \in c} a^{(l)}[b, j] - \varepsilon\right)\right)
 $$
 
 where $\tau$ is a temperature parameter and $\sigma$ is the sigmoid function. A
@@ -73,14 +74,16 @@ The contribution weight of each level is then a recursive product of descent
 decisions. Defining level $L$ as the coarsest and level $0$ as full resolution:
 
 $$
-    w^{(L)}[b, c] = 1 - g^{(L)}[b, c]
+w^{(L)}[b, c] = 1 - g^{(L)}[b, c]
 $$
+
 $$
-    w^{(l)}[b, c] = \left(1 - g^{(l)}[b, c]\right) \prod_{m=l+1}^{L} g^{(m)}[b, c]
+w^{(l)}[b, c] = \left(1 - g^{(l)}[b, c]\right) \prod_{m=l+1}^{L} g^{(m)}[b, c]
     \quad \text{for } 0 < l < L
 $$
+
 $$
-    w^{(0)}[b, c] = \prod_{m=1}^{L} g^{(m)}[b, c]
+w^{(0)}[b, c] = \prod_{m=1}^{L} g^{(m)}[b, c]
 $$
 
 The finest level carries no $(1 - g^{(0)})$ factor: once we reach full
@@ -92,7 +95,7 @@ The final output for query block $b$ is then a weighted sum of value
 representations across all levels:
 
 $$
-    o = \sum_{l=0}^{L}W^{(l)}\cdot A^{(l)}\cdot V^{(l)}
+o = \sum_{l=0}^{L}W^{(l)}\cdot A^{(l)}\cdot V^{(l)}
 $$
 
 ## Complexity
@@ -106,7 +109,7 @@ At each level $l$, the FPN applies the convolution of complexity bounded by $O(n
 Each FPN applies $L$ blocks to a sequence that is halved at each level. The total cost across all levels and can be summed as a geometric series:
 
 $$
-    \sum_{l=0}^{L} \frac{n}{2^l} \cdot d_h^2 = n d_h^2 \sum_{l=0}^{L} \frac{1}{2^l} \leq 2 n d_h^2
+\sum_{l=0}^{L} \frac{n}{2^l} \cdot d_h^2 = n d_h^2 \sum_{l=0}^{L} \frac{1}{2^l} \leq 2 n d_h^2
 $$
 
 The pyramid costs $O(n d_h^2)$ regardless of $L$, the same asymptotic order as the linear projections $W_Q$, $W_K$, $W_V$ themselves. The FPN is therefore never the bottleneck as its complexity w.r.t n is smaller than that of the attention mechanism, at least for long sequences.
@@ -155,7 +158,7 @@ We train the FPN weights in two phases, with the backbone frozen throughout. The
 In the bootstrap phase, we deactivate the soft gate, and instead we compute the entire FPN and minimize the error on each FPN level independantly. That is we compute a loss against the true attention for each level, as if it had computed every single token.
 
 $$
-    \mathcal{L}_{\text{distill}} = \frac{1}{N_{\text{layers}}} \sum_l \left\| \hat{o}^{(l)} - o^{(l)}_{\text{exact}} \right\|_2^2
+\mathcal{L}_{\text{distill}} = \frac{1}{N_{\text{layers}}} \sum_l \left\| \hat{o}^{(l)} - o^{(l)}_{\text{exact}} \right\|_2^2
 $$
 
 This is a form of layer-wise knowledge distillation: the frozen model acts as a teacher and the FPN learns to replicate its attention behavior.
